@@ -12,7 +12,7 @@ const config = {
 
 const baglanti = new sql.ConnectionPool(config).connect()
     .then(pool => {
-        console.log("Veritabanına başarıyla bağlanıldı!");
+        console.log("Veritabanına bağlanıldı.");
         return pool;
     })
     .catch(err => {

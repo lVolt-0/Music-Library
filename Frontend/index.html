@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="cookie-btn">Click for a cookie!</a>
+    
+    <div class="auth-container">
+        <div id="login-section">
+            <h2>Login</h2>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="login-username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="login-password">
+            </div>
+            <button class="btn" onclick="login()">Login</button>
+            <a class="toggle-link" onclick="toggleForm()">Don't have an account? Register</a>
+        </div>
+
+        <div id="register-section" class="hidden">
+            <h2>Register</h2>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" id="reg-username">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="reg-password">
+            </div>
+            <div class="form-group">
+                <label>Profile Picture (Optional)</label>
+                <input type="file" id="reg-pic" accept="image/*">
+            </div>
+            <button class="btn" onclick="register()">Register</button>
+            <a class="toggle-link" onclick="toggleForm()">Already have an account? Login</a>
+        </div>
+
+        <div id="message-box"></div>
+    </div>
+
+    <script>
+        function toggleForm() {
+            document.getElementById('login-section').classList.toggle('hidden');
+            document.getElementById('register-section').classList.toggle('hidden');
+            document.getElementById('message-box').innerText = '';
+        }
+
+        function showMessage(text, color) {
+            const box = document.getElementById('message-box');
+            box.innerText = text;
+            box.style.color = color;
+        }
+
+        async function register() {
+            const username = document.getElementById('reg-username').value;
+            const password = document.getElementById('reg-password').value;
+            const fileInput = document.getElementById('reg-pic').files[0];
+
+            if (!username || !password) {
+                return showMessage("Username and password are required.", "#ff6b6b");
+            }
+
+            const formData = new FormData();
+            formData.append('username', username);
+            formData.append('password', password);
+            if (fileInput) formData.append('profilePicture', fileInput);
+
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/register', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage("Registration successful! You can now login.", "#4caf50");
+                    setTimeout(toggleForm, 2000);
+                } else {
+                    showMessage("Registration failed. Username may be taken.", "#ff6b6b");
+                }
+            } catch (error) {
+                showMessage("Cannot connect to server.", "#ff6b6b");
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!username || !password) {
+                return showMessage("Please enter username and password.", "#ff6b6b");
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage("Login successful.", "#4caf50");
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', data.user.username);
+                    
+                    console.log("Token saved:", data.token);
+                } else {
+                    showMessage("Invalid username or password.", "#ff6b6b");
+                }
+            } catch (error) {
+                showMessage("Cannot connect to server.", "#ff6b6b");
+            }
+        }
+    </script>
+</body>
+</html> 

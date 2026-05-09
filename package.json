@@ -19,10 +19,13 @@
   },
   "homepage": "https://github.com/lVolt-0/Music-Library#readme",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "msnodesqlv8": "^5.1.9",
-    "mssql": "^12.5.2"
+    "mssql": "^12.5.2",
+    "multer": "^2.1.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

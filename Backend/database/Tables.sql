@@ -1,31 +1,16 @@
-CREATE TABLE Artists (
-    ArtistID INT IDENTITY(1,1) PRIMARY KEY,
-    ArtistName NVARCHAR(100) NOT NULL,
-    Biography NVARCHAR(MAX) 
+CREATE TABLE Users (
+    Username NVARCHAR(50) PRIMARY KEY, 
+    PasswordHash NVARCHAR(255) NOT NULL,
+    ProfilePicture NVARCHAR(500), 
+    UserRole NVARCHAR(20) DEFAULT 'User' 
 );
 
-CREATE TABLE Genres (
-    GenreID INT IDENTITY(1,1) PRIMARY KEY,
-    GenreName NVARCHAR(50) NOT NULL
-);
-
-CREATE TABLE Albums (
-    AlbumID INT IDENTITY(1,1) PRIMARY KEY,
-    AlbumName NVARCHAR(150) NOT NULL,
-    CoverImage NVARCHAR(500), 
-    ReleaseDate DATE, 
-    ArtistID INT FOREIGN KEY REFERENCES Artists(ArtistID)
-);
-
-CREATE TABLE Songs (
-    SongID INT IDENTITY(1,1) PRIMARY KEY,
-    SongTitle NVARCHAR(150) NOT NULL,
-    Lyrics NVARCHAR(MAX), 
-    AlbumID INT FOREIGN KEY REFERENCES Albums(AlbumID)
-);
-
-CREATE TABLE AlbumGenres (
-    AlbumID INT FOREIGN KEY REFERENCES Albums(AlbumID),
-    GenreID INT FOREIGN KEY REFERENCES Genres(GenreID),
-    PRIMARY KEY (AlbumID, GenreID) 
+CREATE TABLE UserMusic (
+    SongName NVARCHAR(150) NOT NULL,
+    Genre NVARCHAR(50) NOT NULL,
+    Artist NVARCHAR(100) NOT NULL,
+    Album NVARCHAR(150) NOT NULL,
+    AddedByUsername NVARCHAR(50) FOREIGN KEY REFERENCES Users(Username),
+    AddedDate DATETIME DEFAULT GETDATE(),
+    PRIMARY KEY (SongName, AddedByUsername) 
 );
