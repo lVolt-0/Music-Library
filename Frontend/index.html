@@ -3,14 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Music Library</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Sadece görünürlük ayarı için ek bir güvenlik stili */
+        .hidden { display: none !important; }
+    </style>
 </head>
-<body>
+<body class="dashboard-body">
 
     <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="cookie-btn">Click for a cookie!</a>
-    
-    <div class="auth-container">
+
+    <div id="auth-view" class="auth-container" style="margin: 0 auto; margin-top: 10vh;">
         <div id="login-section">
             <h2>Login</h2>
             <div class="form-group">
@@ -42,11 +46,95 @@
             <button class="btn" onclick="register()">Register</button>
             <a class="toggle-link" onclick="toggleForm()">Already have an account? Login</a>
         </div>
-
         <div id="message-box"></div>
     </div>
 
+
+   <div id="dashboard-view" class="hidden" style="width: 100%; max-width: 1100px; margin: 0 auto;">
+        <div class="navbar">
+            <div class="logo">Tablecloth</div>
+            
+           <div class="user-controls" style="display: flex; align-items: center; gap: 15px;">
+                <img id="user-avatar" src="" alt="Avatar" style="width: 45px; height: 45px; border-radius: 50%; object-fit: cover; border: 2px solid #b8860b; display: none;">
+                
+                <h2 style="margin: 0; font-size: 1.2em;">Welcome, <span id="user-display">User</span></h2>
+                <button class="btn logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-container">
+            <div class="add-song-panel">
+                <h3>Add New Song</h3>
+                <div class="form-group">
+                    <input type="text" id="songName" placeholder="Song Name">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="artist" placeholder="Artist">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="album" placeholder="Album">
+                </div>
+                <div class="form-group">
+                    <input type="text" id="genre" placeholder="Genre">
+                </div>
+                <button class="btn" onclick="addSong()">Add to Library</button>
+                <div id="dashboard-msg"></div>
+            </div>
+
+            <div class="library-panel">
+                <div class="library-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="margin: 0;">My Library</h3>
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search songs, artists, genres..." onkeyup="filterSongs()">
+                </div>
+                
+                <table class="music-table">
+                    <thead>
+                        <tr>
+                            <th>Song</th>
+                            <th>Artist</th>
+                            <th>Album</th>
+                            <th>Genre</th>
+                            <th>Action</th> </tr>
+                    </thead>
+                    <tbody id="music-list">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
     <script>
+       
+       function checkAuth() {
+            const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            const profilePic = localStorage.getItem('profilePic'); // Kasadan fotoğrafı al
+
+            if (token) {
+                document.getElementById('auth-view').classList.add('hidden');
+                document.getElementById('dashboard-view').classList.remove('hidden');
+                document.getElementById('user-display').innerText = username;
+                
+                // --- AVATAR MANTIĞI BURADA BAŞLIYOR ---
+                const avatarImg = document.getElementById('user-avatar');
+                if (profilePic && profilePic !== 'null') {
+                    // Kullanıcı fotoğraf yüklediyse (http://localhost:3000/uploads/... adresinden al)
+                    avatarImg.src = 'http://localhost:3000' + profilePic;
+                } else {
+                    // Fotoğraf yoksa, isminin baş harfiyle şık bir avatar oluştur
+                    avatarImg.src = `https://ui-avatars.com/api/?name=${username}&background=2a2a2a&color=b8860b&rounded=true`;
+                }
+                avatarImg.style.display = 'block'; // Resmi görünür yap
+                // --- AVATAR MANTIĞI BİTTİ ---
+
+                fetchMySongs(); 
+            } else {
+                document.getElementById('auth-view').classList.remove('hidden');
+                document.getElementById('dashboard-view').classList.add('hidden');
+            }
+        }
+
         function toggleForm() {
             document.getElementById('login-section').classList.toggle('hidden');
             document.getElementById('register-section').classList.toggle('hidden');
@@ -64,9 +152,7 @@
             const password = document.getElementById('reg-password').value;
             const fileInput = document.getElementById('reg-pic').files[0];
 
-            if (!username || !password) {
-                return showMessage("Username and password are required.", "#ff6b6b");
-            }
+            if (!username || !password) return showMessage("Username and password are required.", "#ff6b6b");
 
             const formData = new FormData();
             formData.append('username', username);
@@ -74,31 +160,21 @@
             if (fileInput) formData.append('profilePicture', fileInput);
 
             try {
-                const response = await fetch('http://localhost:3000/api/auth/register', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const data = await response.json();
-                
+                const response = await fetch('http://localhost:3000/api/auth/register', { method: 'POST', body: formData });
                 if (response.ok) {
                     showMessage("Registration successful! You can now login.", "#4caf50");
                     setTimeout(toggleForm, 2000);
                 } else {
                     showMessage("Registration failed. Username may be taken.", "#ff6b6b");
                 }
-            } catch (error) {
-                showMessage("Cannot connect to server.", "#ff6b6b");
-            }
+            } catch (error) { showMessage("Cannot connect to server.", "#ff6b6b"); }
         }
 
         async function login() {
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
 
-            if (!username || !password) {
-                return showMessage("Please enter username and password.", "#ff6b6b");
-            }
+            if (!username || !password) return showMessage("Please enter username and password.", "#ff6b6b");
 
             try {
                 const response = await fetch('http://localhost:3000/api/auth/login', {
@@ -106,22 +182,140 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, password })
                 });
-
                 const data = await response.json();
 
                 if (response.ok) {
-                    showMessage("Login successful.", "#4caf50");
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('username', data.user.username);
+                    localStorage.setItem('profilePic', data.user.profilePicture); 
                     
-                    console.log("Token saved:", data.token);
+                    checkAuth(); 
+                } else { showMessage("Invalid username or password.", "#ff6b6b"); }
+            } catch (error) { showMessage("Cannot connect to server.", "#ff6b6b"); }
+        }
+
+        if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', data.user.username);
+                    localStorage.setItem('profilePic', data.user.profilePicture); 
+                    
+                    checkAuth(); 
+                }
+
+                function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            localStorage.removeItem('profilePic');
+            checkAuth();
+        }
+
+        async function fetchMySongs() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('http://localhost:3000/api/music', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (response.status === 401 || response.status === 403) return logout();
+
+                const songs = await response.json();
+                const tbody = document.getElementById('music-list');
+                tbody.innerHTML = '';
+
+                songs.forEach(song => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${song.SongName}</td>
+                            <td>${song.Artist}</td>
+                            <td>${song.Album}</td>
+                            <td>${song.Genre}</td>
+                            <td>
+                                <button class="delete-btn" onclick="deleteSong('${song.SongName.replace(/'/g, "\\'")}')">Sil</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) { console.error("Could not load songs", error); }
+        }
+
+        async function addSong() {
+            const token = localStorage.getItem('token');
+            const songName = document.getElementById('songName').value;
+            const artist = document.getElementById('artist').value;
+            const album = document.getElementById('album').value;
+            const genre = document.getElementById('genre').value;
+            const msgBox = document.getElementById('dashboard-msg');
+
+            if (!songName || !artist || !album || !genre) {
+                msgBox.innerText = "Please fill in all fields.";
+                msgBox.style.color = "#ff6b6b";
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:3000/api/music', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({ songName, genre, artist, album })
+                });
+
+                if (response.ok) {
+                    msgBox.innerText = "Song added!";
+                    msgBox.style.color = "#4caf50";
+                    document.getElementById('songName').value = '';
+                    document.getElementById('artist').value = '';
+                    document.getElementById('album').value = '';
+                    document.getElementById('genre').value = '';
+                    fetchMySongs(); 
                 } else {
-                    showMessage("Invalid username or password.", "#ff6b6b");
+                    const data = await response.json();
+                    msgBox.innerText = data.mesaj || "Could not add song.";
+                    msgBox.style.color = "#ff6b6b";
                 }
             } catch (error) {
-                showMessage("Cannot connect to server.", "#ff6b6b");
+                msgBox.innerText = "Server error.";
+                msgBox.style.color = "#ff6b6b";
             }
         }
+
+        // Şarkı Silme Fonksiyonu
+        async function deleteSong(songName) {
+            if(!confirm(`Are you sure you want to delete '${songName}' from your library?`)) return;
+
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`http://localhost:3000/api/music/${encodeURIComponent(songName)}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if (response.ok) {
+                    fetchMySongs(); 
+                } else {
+                    alert("Could not delete the song.");
+                }
+            } catch (error) {
+                console.error("Delete error", error);
+            }
+        }
+
+        // Filtreleme (Arama) Fonksiyonu
+        function filterSongs() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#music-list tr');
+
+            rows.forEach(row => {
+                // Satırdaki tüm metinleri alıp küçük harfe çevirerek aranan kelime var mı diye bakıyoruz
+                const rowText = row.innerText.toLowerCase();
+                if (rowText.includes(query)) {
+                    row.style.display = ''; // Kelime geçiyorsa göster
+                } else {
+                    row.style.display = 'none'; // Geçmiyorsa satırı gizle
+                }
+            });
+        }
+
+        window.onload = checkAuth;
     </script>
 </body>
-</html> 
+</html>

@@ -1,32 +1,21 @@
-/* style.css */
+/* style.css - TEMİZLENMİŞ VE DÜZELTİLMİŞ KOD */
+
+/* GENEL AYARLAR */
 body { 
     background-color: #121212; 
     color: #e0e0e0; 
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    height: 100vh; 
     margin: 0;
+    padding: 20px;
 }
 
-.auth-container { 
-    background: #1e1e1e; 
-    padding: 40px; 
-    border-radius: 6px; 
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
-    width: 100%;
-    max-width: 320px;
+* {
+    box-sizing: border-box; /* Kutu boyutlarının dışarı taşmasını engeller */
 }
 
-h2 {
-    text-align: center;
-    font-weight: 500;
-    margin-top: 0;
-    margin-bottom: 25px;
-    color: #ffffff;
-}
+.hidden { display: none !important; }
 
+/* ORTAK FORM ELEMANLARI */
 .form-group {
     margin-bottom: 15px;
 }
@@ -45,13 +34,12 @@ input[type="text"], input[type="password"], input[type="file"] {
     border: 1px solid #333;
     color: #ffffff;
     border-radius: 4px;
-    box-sizing: border-box;
     font-size: 0.95em;
 }
 
 input:focus {
     outline: none;
-    border-color: #666;
+    border-color: #b8860b;
 }
 
 .btn {
@@ -67,8 +55,33 @@ input:focus {
     transition: background-color 0.2s;
 }
 
-.btn:hover {
-    background-color: #444;
+.btn:hover { background-color: #444; }
+
+#message-box { 
+    margin-top: 15px; 
+    text-align: center; 
+    font-size: 0.85em; 
+}
+
+/* ========================================= */
+/* 1. GİRİŞ (AUTH) EKRANI TASARIMI           */
+/* ========================================= */
+.auth-container { 
+    background: #1e1e1e; 
+    padding: 40px; 
+    border-radius: 6px; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 320px;
+    margin: 10vh auto; /* Ekranın yatayda tam ortasına hizalar */
+}
+
+.auth-container h2 {
+    text-align: center;
+    font-weight: 500;
+    margin-top: 0;
+    margin-bottom: 25px;
+    color: #ffffff;
 }
 
 .toggle-link {
@@ -80,25 +93,151 @@ input:focus {
     font-size: 0.85em;
     cursor: pointer;
 }
+.toggle-link:hover { color: #bbbbbb; }
 
-.toggle-link:hover {
-    color: #bbbbbb;
+/* ========================================= */
+/* 2. DASHBOARD (KONTROL PANELİ) TASARIMI    */
+/* ========================================= */
+#dashboard-view {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto; /* Tam ortaya hizalar */
+    padding-top: 20px;
 }
 
-.hidden { display: none; }
-
-#message-box { 
-    margin-top: 15px; 
-    text-align: center; 
-    font-size: 0.85em; 
+/* Üst Menü (Navbar) */
+.navbar { 
+    display: flex; 
+    justify-content: space-between; /* Logo sola, çıkış sağa */
+    align-items: center; 
+    border-bottom: 1px solid #333; 
+    padding-bottom: 15px; 
+    margin-bottom: 30px; 
 }
 
-/* Sabit Cookie Butonu (Sağ Orta-Üst) */
+.logo {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #b8860b; 
+    letter-spacing: 2px;
+    font-family: 'Georgia', serif;
+    text-transform: uppercase;
+}
+
+.user-controls {
+    display: flex; 
+    align-items: center; 
+    gap: 15px;
+}
+
+.user-controls h2 {
+    margin: 0;
+    font-size: 1.2em;
+}
+
+.logout-btn { 
+    width: auto; 
+    background-color: transparent; 
+    border: 1px solid #ff4c4c;
+    color: #ff4c4c;
+    padding: 8px 15px; 
+    margin-top: 0; 
+}
+.logout-btn:hover { background-color: #ff4c4c; color: #ffffff; }
+
+/* Panellerin Yan Yana Durması (Flexbox) */
+.dashboard-container { 
+    display: flex; 
+    gap: 30px; 
+    align-items: flex-start;
+}
+
+/* Sol Panel (Şarkı Ekleme) */
+.add-song-panel { 
+    background: #1e1e1e; 
+    padding: 25px; 
+    border-radius: 6px; 
+    width: 300px; /* Genişliği sabitledik, devasa olmayacak */
+    flex-shrink: 0; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
+.add-song-panel h3, .library-panel h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+#dashboard-msg {
+    margin-top: 15px;
+    font-size: 0.85em;
+    text-align: center;
+}
+
+/* Sağ Panel (Kütüphane Tablosu) */
+.library-panel { 
+    flex: 1; /* Kalan tüm boşluğu doldurur */
+    background: #1e1e1e; 
+    padding: 25px; 
+    border-radius: 6px; 
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    overflow-x: auto;
+}
+
+.library-header {
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    margin-bottom: 20px;
+}
+
+.library-header h3 { margin: 0; }
+
+.search-input {
+    padding: 8px 12px;
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    color: #fff;
+    border-radius: 4px;
+    width: 250px;
+    font-size: 0.9em;
+    transition: border-color 0.3s;
+}
+.search-input:focus { border-color: #b8860b; outline: none; }
+
+.music-table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    text-align: left; 
+    font-size: 0.95em;
+}
+
+.music-table th, .music-table td { 
+    padding: 12px; 
+    border-bottom: 1px solid #333; 
+}
+
+.music-table th { color: #aaaaaa; font-weight: 500; }
+.music-table tr:hover { background-color: rgba(255, 255, 255, 0.03); }
+
+.delete-btn {
+    background-color: transparent;
+    color: #ff6b6b;
+    border: 1px solid #ff6b6b;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: all 0.2s;
+}
+.delete-btn:hover { background-color: #ff6b6b; color: #fff; }
+
+/* Sabit Cookie Butonu */
 .cookie-btn {
-    position: fixed; /* Sayfa kaydırılsa bile yerinde sabit kalır */
-    top: 15%; /* Üstten biraz aşağıda (Sağ orta-üst) */
-    right: 20px; /* Sağ kenara yapışık */
-    background-color: #d4c4a8; /* Tasarıma uygun parşömen/kurabiye rengi */
+    position: fixed; 
+    top: 15%; 
+    right: 20px; 
+    background-color: #d4c4a8; 
     color: #121212;
     padding: 10px 15px;
     text-decoration: none;
@@ -106,10 +245,7 @@ input:focus {
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
     transition: transform 0.2s, background-color 0.2s;
-    z-index: 9999; /* Her zaman en üst katmanda, diğer yazıların üzerinde durmasını sağlar */
+    z-index: 9999; 
 }
 
-.cookie-btn:hover {
-    background-color: #ffffff;
-    transform: scale(1.05); /* Üzerine gelince hafifçe büyür */
-}
+.cookie-btn:hover { background-color: #ffffff; transform: scale(1.05); }
