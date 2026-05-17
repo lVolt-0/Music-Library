@@ -74,9 +74,21 @@
                 <div class="form-group">
                     <input type="text" id="album" placeholder="Album">
                 </div>
+                
                 <div class="form-group">
-                    <input type="text" id="genre" placeholder="Genre">
+                    <select id="genreSelect" onchange="checkNewGenre()">
+                        <option value="" disabled selected>Select a Genre</option>
+                        <option value="Alternative Rock">Alternative Rock</option>
+                        <option value="Nu Metal">Nu Metal</option>
+                        <option value="Indie Pop">Indie Pop</option>
+                        <option value="new" style="color: #b8860b; font-weight: bold;">+ Add New Genre...</option>
+                    </select>
                 </div>
+
+                <div class="form-group hidden" id="customGenreGroup">
+                    <input type="text" id="customGenre" placeholder="Type your new genre here">
+                </div>
+
                 <button class="btn" onclick="addSong()">Add to Library</button>
                 <div id="dashboard-msg"></div>
             </div>
@@ -94,10 +106,11 @@
                             <th>Artist</th>
                             <th>Album</th>
                             <th>Genre</th>
-                            <th>Action</th> </tr>
+                            <th>Action</th> 
+                        </tr>
                     </thead>
                     <tbody id="music-list">
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -194,48 +207,23 @@
             } catch (error) { showMessage("Cannot connect to server.", "#ff6b6b"); }
         }
 
-        if (response.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('username', data.user.username);
-                    localStorage.setItem('profilePic', data.user.profilePicture); 
-                    
-                    checkAuth(); 
-                }
-
-                function logout() {
+        function logout() {
             localStorage.removeItem('token');
             localStorage.removeItem('username');
             localStorage.removeItem('profilePic');
             checkAuth();
         }
 
-        async function fetchMySongs() {
-            const token = localStorage.getItem('token');
-            try {
-                const response = await fetch('http://localhost:3000/api/music', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                });
-                
-                if (response.status === 401 || response.status === 403) return logout();
-
-                const songs = await response.json();
-                const tbody = document.getElementById('music-list');
-                tbody.innerHTML = '';
-
-                songs.forEach(song => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${song.SongName}</td>
-                            <td>${song.Artist}</td>
-                            <td>${song.Album}</td>
-                            <td>${song.Genre}</td>
-                            <td>
-                                <button class="delete-btn" onclick="deleteSong('${song.SongName.replace(/'/g, "\\'")}')">Sil</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } catch (error) { console.error("Could not load songs", error); }
+        function checkNewGenre() {
+            const select = document.getElementById('genreSelect');
+            const customGroup = document.getElementById('customGenreGroup');
+            
+            if (select.value === 'new') {
+                customGroup.classList.remove('hidden');
+                document.getElementById('customGenre').focus();
+            } else {
+                customGroup.classList.add('hidden');
+            }
         }
 
         async function addSong() {
@@ -243,8 +231,12 @@
             const songName = document.getElementById('songName').value;
             const artist = document.getElementById('artist').value;
             const album = document.getElementById('album').value;
-            const genre = document.getElementById('genre').value;
             const msgBox = document.getElementById('dashboard-msg');
+
+            let genre = document.getElementById('genreSelect').value;
+            if (genre === 'new') {
+                genre = document.getElementById('customGenre').value;
+            }
 
             if (!songName || !artist || !album || !genre) {
                 msgBox.innerText = "Please fill in all fields.";
@@ -262,11 +254,23 @@
                 if (response.ok) {
                     msgBox.innerText = "Song added!";
                     msgBox.style.color = "#4caf50";
+                    
+                    const genreSelect = document.getElementById('genreSelect');
+                    if (genreSelect.value === 'new') {
+                        const newOption = document.createElement('option');
+                        newOption.value = genre;
+                        newOption.innerText = genre;
+                        genreSelect.insertBefore(newOption, genreSelect.lastElementChild);
+                    }
+
                     document.getElementById('songName').value = '';
                     document.getElementById('artist').value = '';
                     document.getElementById('album').value = '';
-                    document.getElementById('genre').value = '';
-                    fetchMySongs(); 
+                    document.getElementById('genreSelect').value = ''; 
+                    document.getElementById('customGenre').value = ''; 
+                    document.getElementById('customGenreGroup').classList.add('hidden'); 
+                    
+                    fetchMySongs();
                 } else {
                     const data = await response.json();
                     msgBox.innerText = data.mesaj || "Could not add song.";
@@ -276,6 +280,48 @@
                 msgBox.innerText = "Server error.";
                 msgBox.style.color = "#ff6b6b";
             }
+        }
+
+        async function fetchMySongs() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('http://localhost:3000/api/music', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                
+                if (response.status === 401 || response.status === 403) return logout();
+
+                const songs = await response.json();
+                const tbody = document.getElementById('music-list');
+                tbody.innerHTML = '';
+
+                const genreSelect = document.getElementById('genreSelect');
+                const uniqueGenres = [...new Set(songs.map(song => song.Genre))];
+                
+                uniqueGenres.forEach(genreName => {
+                    let exists = Array.from(genreSelect.options).some(opt => opt.value === genreName);
+                    if (!exists && genreName) {
+                        const newOption = document.createElement('option');
+                        newOption.value = genreName;
+                        newOption.innerText = genreName;
+                        genreSelect.insertBefore(newOption, genreSelect.lastElementChild);
+                    }
+                });
+
+                songs.forEach(song => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${song.SongName}</td>
+                            <td>${song.Artist}</td>
+                            <td>${song.Album}</td>
+                            <td>${song.Genre}</td>
+                            <td>
+                                <button class="delete-btn" onclick="deleteSong('${song.SongName.replace(/'/g, "\\'")}')">Sil</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (error) { console.error("Could not load songs", error); }
         }
 
         // Şarkı Silme Fonksiyonu
