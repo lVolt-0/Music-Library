@@ -1,0 +1,103 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Tablecloth Music Library API",
+    "version": "1.0.0",
+    "description": "Sistem Analizi ve Tasarımı dersi için geliştirilmiş Müzik Kütüphanesi ve Kullanıcı Yönetimi API'si."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Yerel Sunucu"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/login": {
+      "post": {
+        "summary": "Kullanıcı Girişi",
+        "tags": ["Kimlik Doğrulama (Auth)"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Giriş başarılı, JWT Token döner." },
+          "401": { "description": "Hatalı şifre veya kullanıcı." }
+        }
+      }
+    },
+    "/api/music": {
+      "get": {
+        "summary": "Kullanıcının Müzik Kütüphanesini Getir",
+        "tags": ["Müzik Yönetimi (Music)"],
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Şarkıların listesi döner." },
+          "401": { "description": "Token (Mühür) eksik." }
+        }
+      },
+      "post": {
+        "summary": "Kütüphaneye Yeni Şarkı Ekle",
+        "tags": ["Müzik Yönetimi (Music)"],
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "songName": { "type": "string" },
+                  "artist": { "type": "string" },
+                  "album": { "type": "string" },
+                  "genre": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Şarkı başarıyla eklendi." },
+          "400": { "description": "Eksik bilgi gönderildi." }
+        }
+      }
+    },
+    "/api/music/{songName}": {
+      "delete": {
+        "summary": "Kütüphaneden Şarkı Sil",
+        "tags": ["Müzik Yönetimi (Music)"],
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "songName",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Şarkı kütüphaneden kaldırıldı." }
+        }
+      }
+    }
+  }
+}
